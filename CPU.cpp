@@ -74,7 +74,7 @@ void Cpu::cpuDump() {
 void Cpu::startTick() {
     Cpu &cpu = getCPU();
 
-    if(cpu.state = IDLE) {
+    if(cpu.state == IDLE) {
         cpu.state = FETCH;
 
     }
@@ -85,7 +85,7 @@ void Cpu::doCycleWork() {
     DataMemory &memory = getDataMemory();
     InstructionMemory &imemory = getInstMemory();
 
-    if (cpu.state = FETCH) {
+    if (cpu.state == FETCH) {
         unsigned long instruction = imemory.instArr[cpu.PC]; //get instruction from imemory at address pointed to by PC;
         //TODO
     }
