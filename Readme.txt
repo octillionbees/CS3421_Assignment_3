@@ -1,0 +1,1 @@
+I put in an honest effort to try and figure this program out, and somewhere through it, my brain stopped working. I think I've implemented Instruction Memory correctly, but the additional clock ticks for completion, as well as any interaction between the devices, has not been implemented. We'll get 'em next time folks.
