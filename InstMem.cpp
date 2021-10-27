@@ -66,7 +66,7 @@ void InstructionMemory::set(int hexAddress, FILE* dataFile) {
     int i = 0;
     char* instruction;
     while (fscanf(dataFile, "%ms", instruction) > 0) {
-        memory.instArr[hexAddress + i] = (unsigned long) atol(instruction);
+        memory.instArr[hexAddress + i] = (unsigned long) strtol(instruction, NULL, 16);
         i++;
     }
 

@@ -6,10 +6,6 @@
 #include <fstream>
 
 
-//state definitions
-const int IDLE = 0;
-const int FETCH = 1;
-const int WAIT = 2;
 
 /**
  * function that contains and returns the single instance of a CPU
@@ -87,7 +83,12 @@ void Cpu::doCycleWork() {
 
     if (cpu.state == FETCH) {
         unsigned long instruction = imemory.instArr[cpu.PC]; //get instruction from imemory at address pointed to by PC;
-        //TODO
+        unsigned char instEnc = (unsigned char) (instruction >> 17); //bit shift right 17 to get last bits
+        if (instEnc == 5) {
+            //lw
+        } else if (instEnc == 6) {
+            //sw
+        }
     }
 
 }

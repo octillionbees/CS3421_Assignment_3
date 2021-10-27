@@ -7,6 +7,10 @@
 
 class Cpu
 {
+    //state definitions
+    const int IDLE = 0;
+    const int FETCH = 1;
+    const int WAIT = 2;
 
 public:
     unsigned char regs[8];
