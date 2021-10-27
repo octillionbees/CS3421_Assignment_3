@@ -72,7 +72,6 @@ void Cpu::startTick() {
 
     if(cpu.state == IDLE) {
         cpu.state = FETCH;
-
     }
 }
 
@@ -91,6 +90,10 @@ void Cpu::doCycleWork() {
         }
     }
 
+}
+
+bool Cpu::moreCycleWorkNeeded() {
+    return false;
 }
 
 void Cpu::cpuParse(FILE* inFile) {

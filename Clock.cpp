@@ -33,11 +33,27 @@ void Clock::tick(int n) {
     Cpu &cpu = getCPU();
     DataMemory &memory = getDataMemory();
 
+    bool workToDo = true;
+
     for (int i = 0; i < n; i++) {
         clock.counter++;
+        //tell all devices we are starting a new tick, allowing them to change state,
+        //set counters, etc.
         cpu.startTick();
         memory.startTick();
 
+        //Continue to loop while ANY device has more work to do
+        //on this cycle. Devices often have more work to do to finish an instruction,
+        //but it may need to wait for a new tick, and nothing remains for this cycle.
+        while(workToDo) {
+            //give each deice a chance to do some work such as
+            //issue requests, process results, change state, etc.
+            memory.doCycleWork();
+            cpu.doCycleWork();
+
+            //Poll all devices. Will be true if ANY device has more work to do on THIS cycle.
+            workToDo = cpu.moreCycleWorkNeeded() || memory.moreCycleWorkNeeded();
+        }
     }
  }
 

@@ -8,11 +8,23 @@
 
 class DataMemory
 {
+    const int MEM_TICK_DELAY = 5;
+
+    //definitions for states
+    const int IDLE = 0;
+    const int WAIT = 1;
+    const int MOVE_DATA = 2;
+
 public:
 
     unsigned char* memArr;
     int memSize;
     int state;
+    int tickCounter;
+    int count;
+    unsigned int address;
+    unsigned char* answerPtr;
+    bool* memDonePtr;
 
     /**
      * Creates the memory bank to be used for the system.

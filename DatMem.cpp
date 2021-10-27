@@ -7,12 +7,9 @@
 
 using namespace std;
 
-const int MEM_TICK_DELAY = 5;
 
-//definitions for states
-const int IDLE = 0;
-const int WAIT = 1;
-const int MOVE_DATA = 2;
+
+
 
 /**
  * function that contains and returns the single instance of a Memory object
@@ -95,18 +92,42 @@ void DataMemory::reset()
 }
 
 void DataMemory::startTick() {
-    
+    DataMemory &memory = getDataMemory();
+
+    memory.tickCounter++;
+    if (memory.state == WAIT && memory.tickCounter == MEM_TICK_DELAY) {
+        memory.state = MOVE_DATA;
+    }
 }
 
 void DataMemory::StartFetch(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr) {
     DataMemory &memory = getDataMemory();
-    
-    
-    for (unsigned int i = 0; i < count; i++) {
-        *dataPtr = memory.memArr[address + i];
-    }
 
-    *donePtr = true;
+    memory.state = WAIT;
+    memory.address = address;
+    memory.count = count;
+    memory.answerPtr = dataPtr;
+    memory.memDonePtr = donePtr;
+    //Cannot finish work now (need wait cycles), so all done
+}
+
+void DataMemory::doCycleWork() {
+    DataMemory &memory = getDataMemory();
+
+    //finished wait, and moved to MOVE_DATA state?
+    if (memory.state == MOVE_DATA) {
+        //copy data back to caller
+        memcpy(memory.answerPtr, memory.memArr[memory.address], memory.count);
+        //tell caller memory operation is complete
+        *memory.memDonePtr = true;
+        memory.state = IDLE;
+    }
+}
+
+bool DataMemory::moreCycleWorkNeeded() {
+    DataMemory &memory = getDataMemory();
+
+    return (memory.state != WAIT || memory.state != IDLE);
 }
 
 /**
