@@ -95,7 +95,6 @@ void Cpu::doCycleWork() {
     } else if (cpu.state == WAIT) {
         if (cpu.memDone) {
             cpu.state = IDLE;
-            cpu.PC++;
         }
 
     }
@@ -119,6 +118,7 @@ void Cpu::loadWord(unsigned long instruction) {
     memory.startFetch(cpu.regs[target], 1, &(cpu.regs[dest]), &cpu.memDone);
     cpu.memDone = false;
     cpu.state = WAIT;
+    cpu.PC++;
 }
 
 void Cpu::storeWord(unsigned long instruction) {
@@ -137,6 +137,7 @@ void Cpu::storeWord(unsigned long instruction) {
     memory.startStore(cpu.regs[target], 1, &(cpu.regs[src]), &cpu.memDone);
     cpu.memDone = false;
     cpu.state = WAIT;
+    cpu.PC++;
 }
 
 bool Cpu::moreCycleWorkNeeded() {
