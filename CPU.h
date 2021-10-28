@@ -11,12 +11,16 @@ class Cpu
     const int IDLE = 0;
     const int FETCH = 1;
     const int WAIT = 2;
+    const int DOING_WORK = 3;
+    const int HALTED = 4;
 
 public:
     unsigned char regs[8];
     unsigned char PC;
     int state;
     bool memDone;
+    int waitCycles;
+    int tickCounter;
 
     /**
      * Causes all CPU registers (including PC) to be zero
@@ -42,9 +46,25 @@ public:
 
     void cpuParse(FILE* inFile);
 
+    //Assembly Commands:
+
     void loadWord(unsigned long instruction);
 
     void storeWord(unsigned long instruction);
+
+    void add(unsigned long instruction);
+
+    void addi(unsigned long instruction);
+
+    void mul(unsigned long instruction);
+
+    void inv(unsigned long instruction);
+
+    void beq(unsigned long instruction);
+
+    void bneq(unsigned long instruction);
+
+    void blt(unsigned long instruction);
 };
 
 #endif

@@ -71,6 +71,12 @@ void Cpu::startTick() {
     Cpu &cpu = getCPU();
     //printf("cpu: tick!\n");
 
+    if(cpu.state == DOING_WORK) {
+        cpu.tickCounter++;
+    }
+    if(cpu.state == DOING_WORK && cpu.tickCounter == cpu.waitCycles) {
+        cpu.state = FETCH;
+    }
     if(cpu.state == IDLE) {
         cpu.state = FETCH;
     }
@@ -90,6 +96,35 @@ void Cpu::doCycleWork() {
         } else if (instEnc == 6) {
             //sw
             storeWord(instruction);
+        } else if (instEnc == 0) {
+            //add
+            add(instruction);
+        } else if (instEnc == 1) {
+            //addi
+            addi(instruction);
+        } else if (instEnc == 2) {
+            //mul
+            mul(instruction);
+        } else if (instEnc == 3) {
+            //inv
+            inv(instruction);
+        } else if (instEnc == 4) {
+            //branches
+            unsigned int branchEnc = (instruction & 0x1C000) >> 14;
+            if (branchEnc == 0) {
+                //beq
+                beq(instruction);
+            } else if (branchEnc == 1) {
+                //bneq
+                bneq(instruction);
+            } else if (branchEnc == 2) {
+                //blt
+                blt(instruction);
+            }
+        } else if (instEnc == 7) {
+            //halt
+            cpu.state = HALTED;
+            cpu.PC++;
         }
 
     } else if (cpu.state == WAIT) {
@@ -99,6 +134,125 @@ void Cpu::doCycleWork() {
 
     }
 
+}
+
+void Cpu::add(unsigned long instruction) {
+    Cpu &cpu = getCPU();
+
+    unsigned int dest = (instruction & 0x1C000) >> 14;
+    unsigned int src = (instruction & 0x03800) >> 11;
+    unsigned int target = (instruction & 0x00700) >> 8;
+
+    cpu.regs[dest] = ((signed char)cpu.regs[src]) + ((signed char)cpu.regs[target]);
+
+    //completes in one cycle
+    cpu.waitCycles = 1;
+    cpu.tickCounter = 0;
+    cpu.state = DOING_WORK;
+    cpu.PC++;
+}
+
+void Cpu::addi(unsigned long instruction) {
+    Cpu &cpu = getCPU();
+
+    unsigned int dest = (instruction & 0x1C000) >> 14;
+    unsigned int src = (instruction & 0x03800) >> 11;
+    int imm = (instruction & 0x000FF);
+
+    cpu.regs[dest] = ((signed char)cpu.regs[src]) + imm;
+
+    //completes in one cycle
+    cpu.waitCycles = 1;
+    cpu.tickCounter = 0;
+    cpu.state = DOING_WORK;
+    cpu.PC++;
+}
+
+void Cpu::mul(unsigned long instruction) {
+    Cpu &cpu = getCPU();
+
+    unsigned int dest = (instruction & 0x1C000) >> 14;
+    unsigned int src = (instruction & 0x03800) >> 11;
+
+    unsigned int srcTop = cpu.regs[src] >> 4;
+    unsigned int srcBot = (cpu.regs[src] & 0x0F);
+
+    cpu.regs[dest] = srcTop * srcBot;
+
+    //completes in two cycles
+    cpu.waitCycles = 2;
+    cpu.tickCounter = 0;
+    cpu.state = DOING_WORK;
+    cpu.PC++;
+}
+
+void Cpu::inv(unsigned long instruction){
+    Cpu &cpu = getCPU();
+
+    unsigned int dest = (instruction & 0x1C000) >> 14;
+    unsigned int src = (instruction & 0x03800) >> 11;
+
+    cpu.regs[dest] = ~cpu.regs[src];
+
+    //completes in one cycle
+    cpu.waitCycles = 1;
+    cpu.tickCounter = 0;
+    cpu.state = DOING_WORK;
+    cpu.PC++;
+}
+
+void Cpu::beq(unsigned long instruction) {
+    Cpu &cpu = getCPU();
+
+    unsigned int src = (instruction & 0x03800) >> 11;
+    unsigned int target = (instruction & 0x00700) >> 8;
+    unsigned char imm = (instruction & 0x000FF);
+
+    if (cpu.regs[src] == cpu.regs[target]) {
+        cpu.PC = imm;
+        cpu.waitCycles = 2;
+    } else {
+        cpu.PC++;
+        cpu.waitCycles = 1;
+    }
+    cpu.tickCounter = 0;
+    cpu.state = DOING_WORK;
+}
+
+void Cpu::bneq(unsigned long instruction) {
+    Cpu &cpu = getCPU();
+
+    unsigned int src = (instruction & 0x03800) >> 11;
+    unsigned int target = (instruction & 0x00700) >> 8;
+    unsigned char imm = (instruction & 0x000FF);
+
+    if (cpu.regs[src] != cpu.regs[target]) {
+        cpu.PC = imm;
+        cpu.waitCycles = 2;
+    } else {
+        cpu.PC++;
+        cpu.waitCycles = 1;
+    }
+    cpu.tickCounter = 0;
+    cpu.state = DOING_WORK;
+}
+
+void Cpu::blt(unsigned long instruction) {
+    Cpu &cpu = getCPU();
+
+    unsigned int src = (instruction & 0x03800) >> 11;
+    unsigned int target = (instruction & 0x00700) >> 8;
+    unsigned char imm = (instruction & 0x000FF);
+
+    if (cpu.regs[src] < cpu.regs[target]) {
+        cpu.PC = imm;
+        cpu.waitCycles = 2;
+    } else {
+        cpu.PC++;
+        cpu.waitCycles = 1;
+    }
+    cpu.tickCounter = 0;
+    cpu.state = DOING_WORK;
 }
 
 void Cpu::loadWord(unsigned long instruction) {
