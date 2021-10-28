@@ -16,6 +16,7 @@ public:
     unsigned char regs[8];
     unsigned char PC;
     int state;
+    bool memDone;
 
     /**
      * Causes all CPU registers (including PC) to be zero
@@ -40,6 +41,10 @@ public:
     bool moreCycleWorkNeeded();
 
     void cpuParse(FILE* inFile);
+
+    void loadWord(unsigned long instruction);
+
+    void storeWord(unsigned long instruction);
 };
 
 #endif

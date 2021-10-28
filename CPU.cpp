@@ -69,6 +69,7 @@ void Cpu::cpuDump() {
 
 void Cpu::startTick() {
     Cpu &cpu = getCPU();
+    //printf("cpu: tick!\n");
 
     if(cpu.state == IDLE) {
         cpu.state = FETCH;
@@ -85,15 +86,63 @@ void Cpu::doCycleWork() {
         unsigned char instEnc = (unsigned char) (instruction >> 17); //bit shift right 17 to get last bits
         if (instEnc == 5) {
             //lw
+            loadWord(instruction);
         } else if (instEnc == 6) {
             //sw
+            storeWord(instruction);
         }
+
+    } else if (cpu.state == WAIT) {
+        if (cpu.memDone) {
+            cpu.state = IDLE;
+            cpu.PC++;
+        }
+
     }
 
 }
 
+void Cpu::loadWord(unsigned long instruction) {
+    //instruction structure:
+    //101 ddd --- ttt --------
+    //load a word into register $d from data memory at the address specified in register $t
+    Cpu &cpu = getCPU();
+    DataMemory &memory = getDataMemory();
+
+    //mask instruction to get destination register:
+    //0x1C000 = 0b00011100000000000000
+    unsigned int dest = (instruction & 0x1C000) >> 14;
+    //mask instruction to get target register:
+    //0x00700 = 0b00000000011100000000
+    unsigned int target = (instruction & 0x00700) >> 8;
+
+    memory.startFetch(cpu.regs[target], 1, &(cpu.regs[dest]), &cpu.memDone);
+    cpu.memDone = false;
+    cpu.state = WAIT;
+}
+
+void Cpu::storeWord(unsigned long instruction) {
+    //instruction structure:
+    //110 --- sss ttt --------
+    //store the value in register $s into data memory at the address specified in register $t
+    Cpu &cpu = getCPU();
+    DataMemory &memory = getDataMemory();
+    //mask instruction to get source register:
+    //0x03800 = 0b00000011100000000000
+    unsigned int src = (instruction & 0x03800) >> 11;
+    //mask instruction to get target register:
+    //0x00700 = 0b00000000011100000000
+    unsigned int target = (instruction & 0x00700) >> 8;
+
+    memory.startStore(cpu.regs[target], 1, &(cpu.regs[src]), &cpu.memDone);
+    cpu.memDone = false;
+    cpu.state = WAIT;
+}
+
 bool Cpu::moreCycleWorkNeeded() {
-    return false;
+    Cpu &cpu = getCPU();
+
+    return (cpu.memDone && cpu.state == WAIT);
 }
 
 void Cpu::cpuParse(FILE* inFile) {

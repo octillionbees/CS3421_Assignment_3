@@ -89,18 +89,29 @@ void DataMemory::reset()
     {
         memory.memArr[i] = 0x00;
     }
+    memory.state = IDLE;
 }
 
 void DataMemory::startTick() {
     DataMemory &memory = getDataMemory();
 
-    memory.tickCounter++;
+    //printf("dMem: tick!\n");
+    if (memory.state == WAIT) {
+        memory.tickCounter++;
+    }
     if (memory.state == WAIT && memory.tickCounter == MEM_TICK_DELAY) {
         memory.state = MOVE_DATA;
     }
 }
 
-void DataMemory::StartFetch(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr) {
+/**
+ *
+ * @param address the offset in memory where the read/write should begin
+ * @param count  the number of bytes that should be read/written
+ * @param dataPtr a pointer to where the data should be placed (read) or the source of data(write)
+ * @param donePtr a pointer to a boolean that the memory device will set to true when the data transfer has completed`
+ */
+void DataMemory::startFetch(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr) {
     DataMemory &memory = getDataMemory();
 
     memory.state = WAIT;
@@ -108,6 +119,20 @@ void DataMemory::StartFetch(unsigned int address, unsigned int count, unsigned c
     memory.count = count;
     memory.answerPtr = dataPtr;
     memory.memDonePtr = donePtr;
+    memory.tickCounter = 1;
+    memory.readWrite = FETCH;
+    //Cannot finish work now (need wait cycles), so all done
+}
+void DataMemory::startStore(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr){
+    DataMemory &memory = getDataMemory();
+
+    memory.state = WAIT;
+    memory.address = address;
+    memory.count = count;
+    memory.answerPtr = dataPtr;
+    memory.memDonePtr = donePtr;
+    memory.tickCounter = 1;
+    memory.readWrite = STORE;
     //Cannot finish work now (need wait cycles), so all done
 }
 
@@ -116,18 +141,27 @@ void DataMemory::doCycleWork() {
 
     //finished wait, and moved to MOVE_DATA state?
     if (memory.state == MOVE_DATA) {
-        //copy data back to caller
-        memcpy(memory.answerPtr, memory.memArr[memory.address], memory.count);
-        //tell caller memory operation is complete
-        *memory.memDonePtr = true;
-        memory.state = IDLE;
+        if (memory.readWrite == FETCH) {
+            //copy data back to caller
+            memcpy(memory.answerPtr, memory.memArr + memory.address, memory.count);
+            //tell caller memory operation is complete
+            *(memory.memDonePtr) = true;
+            memory.state = IDLE;
+        } else if (memory.readWrite == STORE) {
+            //copy data back to caller
+            memcpy(memory.memArr + memory.address, memory.answerPtr, memory.count);
+
+            //tell caller memory operation is complete
+            *(memory.memDonePtr) = true;
+            memory.state = IDLE;
+        }
     }
 }
 
 bool DataMemory::moreCycleWorkNeeded() {
     DataMemory &memory = getDataMemory();
 
-    return (memory.state != WAIT || memory.state != IDLE);
+    return (memory.state != WAIT && memory.state != IDLE);
 }
 
 /**

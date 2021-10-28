@@ -21,21 +21,26 @@ int main(int argc, char* argv[]){
     bool datMemCreated = false;
     bool instMemCreated = false;
 
+
     while (fscanf(inFile, "%ms", &devName) > 0) {
         if (!strcmp("cpu", devName)) {
+            //printf("dMem detected\n");
             cpu.cpuParse(inFile);
-            
         }
         if (!strcmp("memory", devName)) {
             datMemCreated = true;
+            //printf("dMem detected\n");
             dmemory.parse(inFile);
         }
         if (!strcmp("clock", devName)) {
+            //printf("clock detected\n");
             clock.clockParse(inFile);
         }
         if (!strcmp("imemory", devName)) {
             instMemCreated = true;
+            //printf("iMem detected\n");
             imemory.parse(inFile);
+
         }
     }
     free(devName);

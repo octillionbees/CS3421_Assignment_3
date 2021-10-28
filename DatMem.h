@@ -14,6 +14,8 @@ class DataMemory
     const int IDLE = 0;
     const int WAIT = 1;
     const int MOVE_DATA = 2;
+    const int FETCH = 3;
+    const int STORE = 4;
 
 public:
 
@@ -21,6 +23,7 @@ public:
     int memSize;
     int state;
     int tickCounter;
+    int readWrite;
     int count;
     unsigned int address;
     unsigned char* answerPtr;
@@ -51,7 +54,9 @@ public:
 
     void parse(FILE* inFile);
 
-    void StartFetch(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr);
+    void startFetch(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr);
+
+    void startStore(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr);
 
     void startTick();
 

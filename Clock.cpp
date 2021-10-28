@@ -33,10 +33,13 @@ void Clock::tick(int n) {
     Cpu &cpu = getCPU();
     DataMemory &memory = getDataMemory();
 
-    bool workToDo = true;
+
 
     for (int i = 0; i < n; i++) {
+        bool workToDo = true;
+
         clock.counter++;
+        //printf("clock: tick!\n");
         //tell all devices we are starting a new tick, allowing them to change state,
         //set counters, etc.
         cpu.startTick();
@@ -48,6 +51,7 @@ void Clock::tick(int n) {
         while(workToDo) {
             //give each deice a chance to do some work such as
             //issue requests, process results, change state, etc.
+            //printf("clock: do cycle work!\n");
             memory.doCycleWork();
             cpu.doCycleWork();
 

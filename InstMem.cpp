@@ -46,11 +46,11 @@ void InstructionMemory::dump(int hexAddress, int hexCount) {
 
     for (int i = hexAddress; i < (hexAddress + hexCount); i++) {
         if (i % 0x08 == 0) {
-            printf("0x%02X %05X ", i, memory.instArr[i]);
+            printf("0x%02X %05lX ", i, memory.instArr[i]);
         } else if (i % 0x08 == 0x07) {
-            printf("%05X\n", memory.instArr[i]);
+            printf("%05lX\n", memory.instArr[i]);
         } else {
-            printf("%05X ", memory.instArr[i]);
+            printf("%05lX ", memory.instArr[i]);
         }
     }
     printf("\n");
@@ -65,7 +65,7 @@ void InstructionMemory::set(int hexAddress, FILE* dataFile) {
     
     int i = 0;
     char* instruction;
-    while (fscanf(dataFile, "%ms", instruction) > 0) {
+    while (fscanf(dataFile, "%ms", &instruction) > 0) {
         memory.instArr[hexAddress + i] = (unsigned long) strtol(instruction, NULL, 16);
         i++;
     }
@@ -77,28 +77,32 @@ void InstructionMemory::parse(FILE* inFile) {
     InstructionMemory &memory = getInstMemory();
     char* memCmd;
 
-    fscanf(inFile, "%ms", memCmd); //load second word on line into memCmd
+    fscanf(inFile, "%ms", &memCmd); //load second word on line into memCmd
 
     if (!strcmp("create", memCmd)) {
-        fscanf(inFile, "%ms", memCmd); //reassign memCmd to be the size
+        //printf("iMem Create Detected\n");
+        fscanf(inFile, "%ms", &memCmd); //reassign memCmd to be the size
         int size = (int)strtol(memCmd, NULL, 0);
         memory.create(size);
     } else if (!strcmp("reset", memCmd)) {
+       // printf("iMem Reset Detected\n");
         memory.reset();
     } else if (!strcmp("dump", memCmd)) {
-        fscanf(inFile, "%ms", memCmd); //reassign memCmd to be the hexAddress;
+        //printf("iMem Dump Detected\n");
+        fscanf(inFile, "%ms", &memCmd); //reassign memCmd to be the hexAddress;
         int hexAddress = (int)strtol(memCmd, NULL, 0);
 
-        fscanf(inFile, "%ms", memCmd); //reassign memCmd to be the hexCount;
+        fscanf(inFile, "%ms", &memCmd); //reassign memCmd to be the hexCount;
         int hexCount = (int)strtol(memCmd, NULL, 0);
 
         memory.dump(hexAddress, hexCount);
     } else if (!strcmp("set", memCmd)) {
-        fscanf(inFile, "%ms", memCmd); //reassign memCmd to be the hexAddress;
+        //printf("iMem Set Detected\n");
+        fscanf(inFile, "%ms", &memCmd); //reassign memCmd to be the hexAddress;
         int hexAddress = (int)strtol(memCmd, NULL, 0);
 
-        fscanf(inFile, "%ms", memCmd); //burning through the "file" keyword
-        fscanf(inFile, "%ms", memCmd); //reassign memCmd to be the filepath
+        fscanf(inFile, "%ms", &memCmd); //burning through the "file" keyword
+        fscanf(inFile, "%ms", &memCmd); //reassign memCmd to be the filepath
 
         FILE* dataFile = fopen(memCmd, "r");
         memory.set(hexAddress, dataFile);
